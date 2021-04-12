@@ -73,7 +73,7 @@ class Form extends Component {
 
   renderInput(name, label, type = "text") {
     const { data, errors } = this.state;
-
+    console.log(errors);
     return (
       <FormInput
         type={type}

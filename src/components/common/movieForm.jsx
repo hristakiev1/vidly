@@ -4,8 +4,8 @@ import Form from "./form";
 import {
   getMovie,
   saveMovie,
-} from "/Users/Monty/vidly/src/services/fakeMovieService";
-import { getGenres } from "/Users/Monty/vidly/src/services/fakeGenreService";
+} from "../../services/fakeMovieService";
+import { getGenres } from "../../services/fakeGenreService";
 
 class MovieForm extends Form {
   state = {
@@ -70,7 +70,7 @@ class MovieForm extends Form {
         <h1>Movie Form</h1>
         <form onSubmit={this.handleSubmit}>
           {this.renderInput("title", "Title")}
-          {this.renderSelect("genreId", "Genre", this.state.genres)}
+          {this.renderDropdown("genreId", "Genre",this.state.genres)}
           {this.renderInput("numberInStock", "Number in Stock", "number")}
           {this.renderInput("dailyRentalRate", "Rate")}
           {this.renderButton("Save")}

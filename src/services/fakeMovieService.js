@@ -100,8 +100,7 @@ export function saveMovie(movie) {
     movieInDb._id = Date.now().toString();
     movies.push(movieInDb);
   }
-  console.log(movieInDb);
-  console.log(movies);
+
   return movieInDb;
 }
 

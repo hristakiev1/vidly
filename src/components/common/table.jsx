@@ -6,6 +6,7 @@ const Table = ({ columns, data, onSort, sortColmn }) => {
   return (
     <table className="table table-striped">
       <TableHeader sortColmn={sortColmn} columns={columns} onSort={onSort} />
+   
       <TableBody data={data} columns={columns} />
     </table>
   );

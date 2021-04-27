@@ -1,14 +1,16 @@
 import React, { Component } from "react";
+import { Link } from "react-router-dom";
+import MoviesTable from "./moviesTable";
 import GenreList from "./common/genreList";
 import Pagination from "./common/pagination";
-import MoviesTable from "./moviesTable";
 import { paginate } from "../utils/paginate";
-import { getGenres } from "../services/fakeGenreService";
-import { getMovies, deleteMovie } from "../services/fakeMovieService";
-import { Link } from "react-router-dom";
-import {SearchBar} from "../utils/searchBar";
+import { SearchBar } from "../utils/searchBar";
+import { getGenres } from "../services/genreService";
+import { getMovies, deleteMovie } from "../services/moviesService";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import _ from "lodash";
-
+import auth from "../services/userService";
 //import { genreFilter } from "../utils/genreFilter";
 
 class Movies extends Component {
@@ -23,18 +25,24 @@ class Movies extends Component {
     sortColmn: { path: "title", order: "asc" },
   };
 
-  componentDidMount() {
-    const genres = [{ _id: "", name: "All Genres" }, ...getGenres()];
-
-    this.setState({ movies: getMovies(), genres });
-   
+  async componentDidMount() {
+    const apiGenres = await getGenres();
+    const movies = await getMovies();
+    const genres = [{ _id: "", name: "All Genres" }, ...apiGenres];
+    this.setState({ movies, genres });
   }
 
-  handleDelete = (movie) => {
-    const movies = this.state.movies.filter((m) => m._id !== movie._id);
-    this.setState({ movies });
+  handleDelete = async (movie) => {
+    const originalMovie = this.state.movies;
+    try {
+      const movies = this.state.movies.filter((m) => m._id !== movie._id);
+      this.setState({ movies });
 
-    deleteMovie(movie._id);
+      await deleteMovie(movie._id);
+    } catch (error) {
+      toast.warning("You don`t have admin rights");
+      this.setState({ movies: originalMovie });
+    }
   };
 
   handleLike = (movie) => {
@@ -73,34 +81,31 @@ class Movies extends Component {
 
     let filtered = allMovies;
 
-   
-    
-    if (searchQuery) 
-    filtered = allMovies.filter((m) =>
-    m.title.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    else if(selectedGenre && selectedGenre._id)
-    filtered = allMovies.filter((m) => m.genre._id === selectedGenre._id); 
-    
+    if (searchQuery)
+      filtered = allMovies.filter((m) =>
+        m.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    else if (selectedGenre && selectedGenre._id)
+      filtered = allMovies.filter((m) => m.genre._id === selectedGenre._id);
+
     const sorted = _.orderBy(filtered, [sortColmn.path], [sortColmn.order]);
-    
-    const movies = paginate(sorted, itemsPerPage, currentPage );
- 
-    
+
+    const movies = paginate(sorted, itemsPerPage, currentPage);
+
     return { totalCount: filtered.length, data: movies };
   };
 
   render() {
-    
-    const { length: count} = this.state.movies;
+    const { length: count } = this.state.movies;
     const { itemsPerPage, currentPage, sortColmn, searchQuery } = this.state;
 
     if (count === 0) return <p>There are no movies in the database.</p>;
 
     const { totalCount, data: movies } = this.getPagedData();
-   
+
     return (
       <div className="row">
+        <ToastContainer position="top-center" />
         <div className="col-3">
           <GenreList
             genres={this.state.genres}
@@ -109,20 +114,21 @@ class Movies extends Component {
           />
         </div>
         <div className="col">
-          <Link
-            to="/movies/new"
-            className="btn btn-primary"
-            style={{ marginBottom: 20 }}
-          >
-            New Movie
-          </Link>
+          {auth.getUser() && (
+            <Link
+              to="/movies/new"
+              className="btn btn-primary"
+              style={{ marginBottom: 20 }}
+            >
+              New Movie
+            </Link>
+          )}
           <p>Showing {totalCount} movies in the database.</p>
 
-          <SearchBar 
-          value={searchQuery}
-          placeholder="search..."
-          onChange={this.handleSearch}
-
+          <SearchBar
+            value={searchQuery}
+            placeholder="search..."
+            onChange={this.handleSearch}
           />
           <MoviesTable
             movies={movies}
